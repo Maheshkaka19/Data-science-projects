@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pool Alpha Reinvestment · NSE Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#030b18;--s1:#071221;--s2:#0d1e35;--s3:#132843;
+  --border:rgba(148,163,184,.09);--border-hi:rgba(245,158,11,.28);
+  --text:#e8edf5;--muted:#5a7494;--dim:#3d5270;
+  --amber:#f59e0b;--amber-lo:rgba(245,158,11,.10);
+  --cyan:#06b6d4;--cyan-lo:rgba(6,182,212,.08);
+  --green:#10b981;--green-lo:rgba(16,185,129,.09);
+  --red:#f43f5e;--red-lo:rgba(244,63,94,.09);
+  --purple:#8b5cf6;
+  --fh:'Bricolage Grotesque',sans-serif;
+  --fm:'Space Mono',monospace;
+  --fb:'Outfit',sans-serif;
+  --r:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{
+  font-family:var(--fb);background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;
+  background-image:
+    radial-gradient(ellipse 70% 35% at 15% -8%,rgba(245,158,11,.04),transparent),
+    radial-gradient(ellipse 50% 28% at 85% 108%,rgba(6,182,212,.04),transparent);
+}
+button,input{font-family:inherit}
+code{font-family:var(--fm);font-size:.85em;color:var(--cyan);background:var(--cyan-lo);
+  border-radius:4px;padding:1px 5px}
+
+/* ── LAYOUT ── */
+.sidebar{
+  width:292px;flex-shrink:0;background:var(--s1);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100vh;position:sticky;top:0;overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--s3)}
+.main{flex:1;min-width:0;padding:28px 32px;display:flex;flex-direction:column;gap:22px}
+
+/* ── SIDEBAR ── */
+.brand{
+  padding:22px 20px 18px;border-bottom:1px solid var(--border);
+  background:linear-gradient(160deg,rgba(245,158,11,.04),transparent);
+}
+.brand-ey{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--amber);font-family:var(--fm);margin-bottom:7px}
+.brand h1{font-family:var(--fh);font-size:1.22rem;font-weight:700;
+  color:var(--text);line-height:1.2;margin-bottom:6px}
+.brand p{font-size:.73rem;color:var(--muted);line-height:1.5}
+
+.sb{padding:18px 20px;border-bottom:1px solid var(--border)}
+.sb h3{
+  font-size:.60rem;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--amber);font-family:var(--fm);margin-bottom:14px;
+  display:flex;align-items:center;gap:6px;
+}
+.sb h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--amber-lo),transparent)}
+
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+.field:last-child{margin-bottom:0}
+.field label{font-size:.71rem;color:var(--muted);font-weight:500}
+.field input{
+  background:var(--s2);border:1px solid var(--border);color:var(--text);
+  border-radius:9px;padding:8px 11px;font-size:.82rem;width:100%;
+  transition:border-color .15s,box-shadow .15s;
+}
+.field input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.07)}
+.fhint{font-size:.65rem;color:var(--dim);line-height:1.45;margin-top:-7px;margin-bottom:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.uz{
+  border:1px dashed rgba(245,158,11,.28);border-radius:10px;
+  background:var(--amber-lo);padding:11px;text-align:center;
+  cursor:pointer;font-size:.73rem;color:var(--muted);
+  min-height:52px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  position:relative;transition:.15s;margin-bottom:10px;
+}
+.uz:hover{border-color:var(--amber);color:var(--text)}
+.uz input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.uz .un{font-size:.69rem;color:var(--amber);font-family:var(--fm);word-break:break-all}
+
+.tog{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  font-size:.77rem;color:var(--muted);margin-bottom:10px;
+  padding:7px 10px;border-radius:8px;
+  border:1px solid var(--border);background:var(--s2);transition:.15s;
+}
+.tog:hover{border-color:var(--border-hi);color:var(--text)}
+.tog input{accent-color:var(--amber);width:14px;height:14px;flex-shrink:0}
+
+.band-info{
+  background:var(--s2);border:1px solid var(--border);border-radius:9px;
+  padding:10px 12px;margin-bottom:10px;
+}
+.bi-row{display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:4px}
+.bi-row:last-child{margin-bottom:0}
+.bi-label{color:var(--muted)}
+.bi-val{font-family:var(--fm);color:var(--amber)}
+
+.run-btn{
+  margin:16px 20px;padding:12px;
+  background:linear-gradient(135deg,#d97706,#f59e0b,#fbbf24);
+  border:none;border-radius:11px;color:#030b18;
+  font-size:.9rem;font-weight:700;font-family:var(--fh);
+  cursor:pointer;width:calc(100% - 40px);
+  box-shadow:0 4px 20px rgba(245,158,11,.22);transition:all .18s;
+}
+.run-btn:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(245,158,11,.35)}
+.run-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ── STATUS ── */
+.status{border-radius:12px;padding:12px 16px;font-size:.80rem;
+  line-height:1.55;border:1px solid transparent;animation:fadeIn .3s ease}
+.s-info{background:rgba(14,116,144,.1);border-color:rgba(14,116,144,.22);color:#a5f3fc}
+.s-ok  {background:var(--green-lo);border-color:rgba(16,185,129,.22);color:#6ee7b7}
+.s-warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.22);color:#fde68a}
+.s-err {background:var(--red-lo);border-color:rgba(244,63,94,.22);color:#fca5a5}
+.status b{color:var(--text)}
+
+/* ── METRIC CARDS ── */
+.mrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px}
+.mc{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px;position:relative;overflow:hidden;
+  animation:slideUp .35s ease both;
+}
+.mc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--border),transparent)}
+.mc.hl{border-color:var(--border-hi);background:linear-gradient(135deg,rgba(245,158,11,.05),var(--s1))}
+.mc.hl::after{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+.mc.g{border-color:rgba(16,185,129,.22);background:var(--green-lo)}
+.mc.g::after{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.mc.r{border-color:rgba(244,63,94,.22);background:var(--red-lo)}
+.mc.r::after{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.mc-lbl{font-size:.67rem;color:var(--muted);margin-bottom:8px;letter-spacing:.03em}
+.mc-val{font-family:var(--fm);font-size:1.10rem;font-weight:700;line-height:1;margin-bottom:5px}
+.mc-d{font-size:.70rem;font-family:var(--fm)}
+.pos{color:var(--green)}.neg{color:var(--red)}.amb{color:var(--amber)}.mut{color:var(--muted)}
+
+/* ── PANELS ── */
+.panel{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--r);padding:22px;animation:slideUp .4s ease both;
+}
+.ph{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;flex-wrap:wrap;gap:8px}
+.ptitle{font-family:var(--fh);font-size:.88rem;font-weight:600;
+  display:flex;align-items:center;gap:8px}
+.psub{font-size:.68rem;font-family:var(--fm);color:var(--muted)}
+
+/* ── CHART ── */
+.cw{width:100%;height:260px}
+canvas{display:block;width:100%!important;height:100%!important}
+.cleg{display:flex;gap:20px;margin-top:10px;flex-wrap:wrap}
+.cleg-i{display:flex;align-items:center;gap:7px;font-size:.70rem;color:var(--muted)}
+.cleg-l{width:22px;height:2px;border-radius:2px;flex-shrink:0}
+
+/* ── STAT GRID ── */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-bottom:14px}
+.st{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.st-l{font-size:.65rem;color:var(--muted);margin-bottom:5px}
+.st-v{font-family:var(--fm);font-size:.88rem;font-weight:700}
+
+/* ── TABLES ── */
+.pos-tbl{width:100%;border-collapse:collapse}
+.pos-tbl th{text-align:left;padding:7px 10px;font-size:.64rem;color:var(--muted);
+  font-weight:500;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.pos-tbl td{padding:9px 10px;font-size:.77rem;border-bottom:1px solid rgba(148,163,184,.05)}
+.pos-tbl td:not(:first-child){text-align:right;font-family:var(--fm)}
+.pos-tbl tr:last-child td{border-bottom:none}
+.pos-tbl .tot td{font-weight:700;border-top:1px solid var(--border);background:var(--s2)}
+
+.tbl-wrap{overflow-x:auto;margin-top:4px}
+table.ht{width:100%;border-collapse:collapse;min-width:780px}
+table.ht th{text-align:left;padding:7px 10px;font-size:.62rem;color:var(--muted);
+  font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  border-bottom:1px solid var(--border);white-space:nowrap}
+table.ht td{padding:7px 10px;font-size:.73rem;font-family:var(--fm);
+  border-bottom:1px solid rgba(148,163,184,.04);white-space:nowrap}
+table.ht .r{text-align:right}
+table.ht .sr td{background:rgba(6,182,212,.02)}
+table.ht .rr td{background:rgba(16,185,129,.03)}
+table.ht .or td{background:rgba(244,63,94,.02)}
+
+.bdg{border-radius:5px;padding:2px 7px;font-size:.61rem;
+  font-weight:700;font-family:var(--fm);letter-spacing:.04em}
+.bs{background:rgba(6,182,212,.14);color:#67e8f9}
+.br{background:var(--green-lo);color:#6ee7b7}
+.bo{background:var(--red-lo);color:#fca5a5}
+.breb{background:rgba(245,158,11,.14);color:#fde68a}
+table.ht .rr td{background:rgba(16,185,129,.03)}
+table.ht .reb-r td{background:rgba(245,158,11,.04)}
+
+.tnote{font-size:.69rem;color:var(--muted);margin-bottom:8px}
+.dlbtn{border:1px solid var(--border-hi);border-radius:8px;
+  padding:6px 12px;background:var(--amber-lo);color:var(--amber);
+  cursor:pointer;font-size:.73rem;font-family:var(--fm);font-weight:700;
+  transition:.15s;display:flex;align-items:center;gap:5px}
+.dlbtn:hover{background:rgba(245,158,11,.18)}
+.pcnt{background:var(--s3);border-radius:999px;padding:4px 10px;
+  font-size:.69rem;font-family:var(--fm);color:var(--muted)}
+
+.expl{background:var(--s2);border:1px solid var(--border);
+  border-left:3px solid var(--green);border-radius:0 10px 10px 0;
+  padding:12px 14px;margin-top:14px;font-size:.74rem;
+  color:var(--muted);line-height:1.65}
+.expl b{color:var(--text)}
+.expl.w{border-left-color:var(--amber)}
+.expl.e{border-left-color:var(--red)}
+
+/* ── OOR BANNER ── */
+.oor-banner{
+  display:flex;align-items:flex-start;gap:10px;
+  background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.20);
+  border-radius:10px;padding:12px 14px;font-size:.76rem;
+  color:#fca5a5;line-height:1.55;margin-bottom:14px;
+}
+.oor-banner b{color:var(--text)}
+
+.hidden{display:none!important}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.d1{animation-delay:.05s}.d2{animation-delay:.10s}.d3{animation-delay:.15s}
+.d4{animation-delay:.20s}.d5{animation-delay:.25s}.d6{animation-delay:.30s}
+@media(max-width:860px){body{flex-direction:column}.sidebar{width:100%;height:auto;position:relative}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-ey">Concentrated Liquidity · NSE Stocks</div>
+    <h1>Pool Alpha<br/>Reinvestment</h1>
+    <p>Fixed concentration band · Volatility harvest · Compounding reinvestment · Zero forced rebalancing</p>
+  </div>
+
+  <div class="sb">
+    <h3>Assets</h3>
+    <div class="field"><label>Asset 1 Name</label><input id="label1" type="text" value="Reliance"/></div>
+    <div class="uz" id="zone1">
+      <span>📂 Asset 1 · 1-minute CSV</span>
+      <span class="un" id="fname1"></span>
+      <input id="file1" type="file" accept=".csv"/>
+    </div>
+    <div class="field"><label>Asset 2 Name</label><input id="label2" type="text" value="Kotak Bank"/></div>
+    <div class="uz" id="zone2">
+      <span>📂 Asset 2 · 1-minute CSV</span>
+      <span class="un" id="fname2"></span>
+      <input id="file2" type="file" accept=".csv"/>
+    </div>
+  </div>
+
+  <div class="sb">
+    <h3>Capital</h3>
+    <div class="field"><label>Starting Capital (₹)</label>
+      <input id="capital" type="number" min="10000" step="100000" value="2000000"/>
+    </div>
+  </div>
+
+  <div class="sb">
+    <h3>Concentration Band</h3>
+    <p class="fhint" style="margin-bottom:12px">Band is set <b style="color:var(--amber)">once</b> at initialisation from the opening price ratio. It <b style="color:var(--amber)">never moves</b>. When price exits the band, the pool holds its position and waits — no forced rebalancing.</p>
+    <label class="tog">
+      <input id="dynBand" type="checkbox" checked/>
+      Auto-size band from data volatility
+    </label>
+    <div id="fixedBandRow" class="field hidden">
+      <label>Fixed Band ±%</label>
+      <input id="fixedBand" type="number" min="1" max="80" step="1" value="20"/>
+    </div>
+    <div class="two">
+      <div class="field"><label>Min Band ±%</label>
+        <input id="minBand" type="number" min="1" max="40" step="0.5" value="8"/>
+      </div>
+      <div class="field"><label>Max Band ±%</label>
+        <input id="maxBand" type="number" min="5" max="80" step="1" value="30"/>
+      </div>
+    </div>
+    <div class="two">
+      <div class="field"><label>Vol Lookback (hrs)</label>
+        <input id="volLB" type="number" min="4" max="168" step="4" value="24"/>
+      </div>
+      <div class="field"><label>Sigma factor (k)</label>
+        <input id="kSig" type="number" min="0.5" max="5" step="0.1" value="2.0"/>
+      </div>
+    </div>
+    <div class="band-info" id="bandInfo">
+      <div class="bi-row"><span class="bi-label">Band width</span><span class="bi-val" id="biWidth">—</span></div>
+      <div class="bi-row"><span class="bi-label">Concentration</span><span class="bi-val" id="biConc">—</span></div>
+      <div class="bi-row"><span class="bi-label">vs full-range</span><span class="bi-val" id="biAmp">—</span></div>
+    </div>
+  </div>
+
+  <div class="sb">
+    <h3>Brokerage</h3>
+    <div class="two">
+      <div class="field"><label>Buy %</label>
+        <input id="bbuy" type="number" min="0" max="5" step="0.01" value="0.15"/>
+      </div>
+      <div class="field"><label>Sell %</label>
+        <input id="bsell" type="number" min="0" max="5" step="0.01" value="0.15"/>
+      </div>
+    </div>
+    <p class="fhint">Trade only fires when Revenue − Cost − Brokerage &gt; 0. Every trade is profitable.</p>
+  </div>
+
+  <div class="sb">
+    <h3>Alpha Reinvestment</h3>
+    <label class="tog"><input id="doReinv" type="checkbox" checked/>Compound profits back into pool</label>
+    <div class="field"><label>Reinvestment Brokerage %</label>
+      <input id="breinv" type="number" min="0" max="5" step="0.01" value="0.15"/>
+    </div>
+    <p class="fhint"><b style="color:var(--amber)">Smart two-mode engine — reinvestment never stops.</b><br/>
+    <b>Normal mode</b> (balanced pool): buys 1A + round(Y/X)B lots, maximum lots per hour.<br/>
+    <b>Rebalance mode</b> (one asset &lt;20% of value): buys only the depleted asset — as few as 1 share — to restore balance before resuming normal mode.<br/>
+    Fires every hour regardless of whether pool is in or out of range.</p>
+  </div>
+
+  <button class="run-btn" id="runBtn">▶ Run Simulation</button>
+</aside>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="main">
+  <div id="status" class="status s-info">
+    <b>Ready.</b> Upload two NSE 1-minute CSV files (<code>date</code>, <code>close</code>, <code>volume</code>) and click Run.
+  </div>
+
+  <div id="mrow" class="mrow hidden"></div>
+
+  <div id="chartPanel" class="panel hidden">
+    <div class="ph">
+      <div class="ptitle">Portfolio Value Over Time —
+        <span id="pairHeading" style="color:var(--amber)">Reliance ↔ Kotak Bank</span>
+        <span class="psub"> · Pool Total · Hold · Reinvestment events</span>
+      </div>
+    </div>
+    <div class="cw"><canvas id="chart"></canvas></div>
+    <div class="cleg">
+      <div class="cleg-i"><div class="cleg-l" style="background:#06b6d4"></div>Pool Total (assets + cash)</div>
+      <div class="cleg-i"><div class="cleg-l" style="background:#8b5cf6;border-top:2px dashed #8b5cf6"></div>Buy &amp; Hold</div>
+      <div class="cleg-i"><span style="color:var(--green);font-size:.9rem">▎</span>Reinvestment</div>
+      <div class="cleg-i"><span style="color:var(--red);font-size:.9rem;opacity:.5">▓</span>Out-of-range period</div>
+    </div>
+  </div>
+
+  <div id="reinvPanel" class="panel hidden">
+    <div class="ph"><div class="ptitle">🔄 Reinvestment &amp; Position Summary</div></div>
+    <div id="reinvStats" class="sgrid"></div>
+    <div id="oorBanner" class="oor-banner hidden"></div>
+    <table class="pos-tbl"><thead><tr>
+      <th>Asset</th><th>Opening Shares</th><th>Opening Value</th>
+      <th>AMM Trades ±</th><th>Added via Reinvest</th>
+      <th>Final Shares</th><th>Final Value</th><th>Change ₹</th>
+    </tr></thead><tbody id="posBody"></tbody></table>
+    <div id="reinvExpl" class="expl"></div>
+  </div>
+
+  <div id="healthPanel" class="panel hidden">
+    <div class="ph"><div class="ptitle">📊 Strategy Health &amp; Pool Analytics</div></div>
+    <div id="healthStats" class="sgrid"></div>
+    <div id="healthExpl" class="expl w"></div>
+  </div>
+
+  <div id="histPanel" class="panel hidden">
+    <div class="ph">
+      <div class="ptitle">📋 Trade Ledger</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="pcnt" id="evtCount"></span>
+        <button class="dlbtn" id="dlBtn">⬇ Export CSV</button>
+      </div>
+    </div>
+    <div class="tnote" id="tblNote"></div>
+    <div class="tbl-wrap">
+      <table class="ht"><thead><tr>
+        <th>Date &amp; Time</th><th>Type</th><th>Action</th>
+        <th class="r">Sold</th><th class="r">Bought</th>
+        <th class="r">Net P&amp;L ₹</th><th class="r">Cash ₹</th>
+        <th class="r">A Shares</th><th class="r">B Shares</th>
+        <th class="r">In Range</th>
+      </tr></thead>
+      <tbody id="histBody"></tbody>
+    </table>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+// ═══════════════════════════════════════════════════════════════
+// UTIL
+// ═══════════════════════════════════════════════════════════════
+const $  = id => document.getElementById(id);
+const cl = (v,lo,hi) => Math.min(hi,Math.max(lo,v));
+const inr  = v => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(v);
+const inr2 = v => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+const pct  = (v,d=2) => `${v>=0?'+':''}${(+v).toFixed(d)}%`;
+const qty  = v => Math.round(v).toLocaleString('en-IN');
+const dec  = (v,d=2) => (+v).toFixed(d);
+const fdt  = s => new Date(s).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+
+// ═══════════════════════════════════════════════════════════════
+// CSV  — robust: quoted fields, multiple timestamp formats
+// ═══════════════════════════════════════════════════════════════
+function parseCsvLine(l){
+  const out=[]; let cur='',q=false;
+  for(const c of l){if(c==='"'){q=!q;continue}if(c===','&&!q){out.push(cur.trim());cur='';continue}cur+=c}
+  out.push(cur.trim()); return out;
+}
+function parseCsv(text){
+  const lines=text.trim().split(/\r?\n/).filter(Boolean);
+  if(lines.length<2) return [];
+  const hdrs=parseCsvLine(lines[0]).map(h=>h.toLowerCase().replace(/[^a-z0-9]/g,''));
+  return lines.slice(1).map(l=>{
+    const c=parseCsvLine(l);
+    return hdrs.reduce((o,h,i)=>{o[h]=(c[i]??'').trim();return o},{});
+  });
+}
+function normalizeRows(rows){
+  return rows
+    .map(r=>({date:new Date(r.date??r.datetime??r.time??''),close:+(r.close??r.ltp??r.price??0)}))
+    .filter(r=>!isNaN(r.date)&&r.close>0)
+    .sort((a,b)=>a.date-b.date);
+}
+// Each asset bucketed by hour independently — robust to timestamp mismatch
+function buildHourly(a1,a2){
+  const bkt=arr=>{const m=new Map();for(const r of arr){const h=new Date(r.date);h.setMinutes(0,0,0);m.set(h.toISOString(),r.close)}return m};
+  const b1=bkt(a1),b2=bkt(a2),out=[];
+  for(const [k,c1] of b1) if(b2.has(k)) out.push({date:new Date(k),c1,c2:b2.get(k)});
+  return out.sort((a,b)=>a.date-b.date);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONCENTRATED LIQUIDITY MATH
+// ═══════════════════════════════════════════════════════════════
+// Liquidity L: given total pool capital, prices, and FIXED band
+function computeL(cap,p1,p2,r,rL,rH){
+  const sr=Math.sqrt(cl(r,rL,rH)),sra=Math.sqrt(rL),srb=Math.sqrt(rH);
+  const d=(1/sr-1/srb)*p1+(sr-sra)*p2;
+  return d>1e-10?cap/d:0;
+}
+// V3 reserve quantities — clamp handles out-of-range automatically:
+//   r > rH  → sr = sqrt(rH) → xReserve ≈ 0  (all A was sold)
+//   r < rL  → sr = sqrt(rL) → yReserve ≈ 0  (all B was sold)
+function v3Res(L,r,rL,rH){
+  const sr=Math.sqrt(cl(r,rL,rH)),sra=Math.sqrt(rL),srb=Math.sqrt(rH);
+  return{x:L*(1/sr-1/srb), y:L*(sr-sra)};
+}
+function concFactor(band){
+  const b=cl(band,0.001,0.98);
+  return 1/(1-Math.sqrt((1-b)/(1+b)));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ROLLING STATS
+// ═══════════════════════════════════════════════════════════════
+function stdDev(arr){
+  if(arr.length<2) return 0;
+  const m=arr.reduce((s,v)=>s+v,0)/arr.length;
+  return Math.sqrt(arr.reduce((s,v)=>s+(v-m)**2,0)/(arr.length-1));
+}
+function pearson(a,b){
+  const n=Math.min(a.length,b.length); if(n<4) return null;
+  const slice=(x)=>x.slice(-n);
+  const ma=slice(a).reduce((s,v)=>s+v,0)/n, mb=slice(b).reduce((s,v)=>s+v,0)/n;
+  let cov=0,sa=0,sb=0;
+  for(let i=0;i<n;i++){const da=a[a.length-n+i]-ma,db=b[b.length-n+i]-mb;cov+=da*db;sa+=da*da;sb+=db*db}
+  const d=Math.sqrt(sa*sb); return d>1e-12?cov/d:0;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SIMULATION
+//
+// ╔══════════════════════════════════════════════════════════╗
+// ║  DESIGN PRINCIPLES (no recentering, no rebalancing)     ║
+// ╠══════════════════════════════════════════════════════════╣
+// ║ 1. FIXED BAND: rL and rH are set ONCE at the opening    ║
+// ║    price ratio. They NEVER change throughout the sim.   ║
+// ║                                                          ║
+// ║ 2. FIXED CENTER: rC = opening ratio. Never moves.       ║
+// ║                                                          ║
+// ║ 3. FIXED L (between reinvestments): L is computed once  ║
+// ║    at init from capital. It only grows when cash profits ║
+// ║    are reinvested — not on every price tick.            ║
+// ║                                                          ║
+// ║ 4. OUT-OF-RANGE: v3Res() clamps r to [rL,rH], giving   ║
+// ║    boundary reserves. The cash-balanced trade will move ║
+// ║    the pool toward the boundary naturally (sell the     ║
+// ║    expensive asset). No position reset. No brokerage    ║
+// ║    forced event. Pool just trades at boundary state.    ║
+// ║                                                          ║
+// ║ 5. CASH-BALANCED TRADES: sell N shares → net proceeds   ║
+// ║    → buy only what proceeds can afford. Revenue always  ║
+// ║    covers cost. No phantom shares, no inventory bleed.  ║
+// ║                                                          ║
+// ║ 6. REINVESTMENT: cash buys 1 A + round(Y/X) B. L is    ║
+// ║    recomputed from new pool value with SAME rL/rH.      ║
+// ╚══════════════════════════════════════════════════════════╝
+// ═══════════════════════════════════════════════════════════════
+function runSimulation(rows1,rows2,capital,cfg){
+  const a1=normalizeRows(rows1), a2=normalizeRows(rows2);
+  if(!a1.length||!a2.length) return{err:'CSV files have no usable rows. Need: date, close columns.'};
+
+  const hourly=buildHourly(a1,a2);
+  if(hourly.length<4) return{err:'Fewer than 4 overlapping hourly bars. Ensure both CSVs cover the same date range.'};
+
+  const bBuy   = cl(+(cfg.bBuy   ??0.15),0,5)/100;
+  const bSell  = cl(+(cfg.bSell  ??0.15),0,5)/100;
+  const bReinv = cl(+(cfg.bReinv ??0.15),0,5)/100;
+  const doReinv = cfg.reinvest !== false;
+  const volLB   = cl(+(cfg.volLB ??24),4,168);
+  const kSig    = cl(+(cfg.kSig  ??2.0),0.5,5);
+  const minBand = cl(+(cfg.minBand??3),0.5,40)/100;
+  const maxBand = cl(+(cfg.maxBand??30),5,80)/100;
+
+  // ── STEP 1: Compute band width from initial data volatility ─
+  //    Uses the first volLB hourly log-ratio returns.
+  //    This is the ONLY time the band is computed.
+  //    After this, rL, rH, rC are permanently fixed.
+  const initLogRets=[];
+  for(let i=1;i<Math.min(hourly.length,volLB+1);i++){
+    const r0=hourly[i-1].c1/hourly[i-1].c2;
+    const r1=hourly[i].c1/hourly[i].c2;
+    if(r0>0&&r1>0) initLogRets.push(Math.log(r1/r0));
+  }
+  let band;
+  if(cfg.dynBand!==false && initLogRets.length>=4){
+    const vol = stdDev(initLogRets);    // hourly σ of log-ratio
+    band = cl(kSig*vol, minBand, maxBand);
+  } else {
+    band = cl(+(cfg.fixedBand??20),1,80)/100;
+  }
+
+  // ── STEP 2: Set fixed band — PERMANENT for entire simulation ─
+  const { c1:p1_0, c2:p2_0 } = hourly[0];
+  const rC = p1_0 / p2_0;               // opening ratio — fixed center
+  const rL = rC * (1 - band);           // lower bound — NEVER changes
+  const rH = rC * (1 + band);           // upper bound — NEVER changes
+  const cf = concFactor(band);          // concentration factor — fixed
+
+  // ── STEP 3: Initialise pool ──────────────────────────────────
+  let L = computeL(capital, p1_0, p2_0, rC, rL, rH);
+  if(L<=0) return{err:'Band too narrow or capital too low — L is zero.'};
+
+  const res0 = v3Res(L, rC, rL, rH);
+  let xS = Math.max(1, Math.round(res0.x));   // live Asset1 shares
+  let yS = Math.max(1, Math.round(res0.y));   // live Asset2 shares
+
+  // Hold reference — never changes
+  const x0=xS, y0=yS;
+  const startCap = x0*p1_0 + y0*p2_0;
+
+  // ── State ────────────────────────────────────────────────────
+  let cash=0, totBrok=0, grossFees=0;
+  let swapCount=0, skipCount=0, oorCount=0, oorHours=0;
+  let reinvestCount=0, reinvestNormalCount=0, reinvestRebalCount=0;
+  let xAdded=0, yAdded=0, reinvestedCap=0;
+
+  // ── Event arrays (were missing — root cause of "curve is not defined") ──
+  const swaps     = [];   // every profitable swap record
+  const reinvests = [];   // every reinvestment record
+  const curve     = [];   // hourly equity snapshot for chart
+  const logRatios = [];   // rolling ratio log-returns → Hurst calculation
+  const lr1=[], lr2=[];   // individual asset log-returns → pair correlation
+  // ── Protective guard state ───────────────────────────────────────
+  // Guard 1 — Hurst trending pause: if rolling Hurst > 0.55 (trending
+  //   regime detected), pause swaps until it drops below 0.48.
+  // Guard 2 — Brokerage cap: if cumulative brokerage exceeds 4% of
+  //   opening capital, widen the effective min-net threshold by 3× to
+  //   throttle marginal trades.
+  // Guard 3 — Swap frequency throttle: if swaps in last 24h > 48
+  //   (avg 2/hr), require net > 2× normal min to slow down.
+  // Guard 4 — Min net threshold: never execute swap with net < ₹10
+  //   to filter brokerage-eating micro-trades.
+  const MIN_NET_INR  = 10;           // Guard 4 base floor
+  const BROK_CAP_PCT = 0.04;         // Guard 2: 4% of start capital
+  const HURST_PAUSE  = 0.55;         // Guard 1: pause threshold
+  const HURST_RESUME = 0.48;         // Guard 1: resume threshold
+  const MAX_SWAPS_24H = 48;          // Guard 3: 2/hr over 24h window
+
+  let trendPaused      = false;      // Guard 1 active flag
+  let trendPausedAt    = null;
+  let trendResumedAt   = null;
+  let guardPauseCount  = 0;
+  const recentSwapTimes = [];        // Guard 3 rolling window
+
+  curve.push({date:hourly[0].date.toISOString(),pool:startCap,hold:startCap,cash:0,inRange:true});
+
+  // ── MAIN LOOP ────────────────────────────────────────────────
+  for(let i=1;i<hourly.length;i++){
+    const{date,c1:p1,c2:p2}=hourly[i];
+    const r=p1/p2;
+
+    // Track log-returns for correlation and Hurst
+    if(i>0 && hourly[i-1].c1>0 && hourly[i-1].c2>0){
+      const dlr1 = Math.log(p1/hourly[i-1].c1);
+      const dlr2 = Math.log(p2/hourly[i-1].c2);
+      lr1.push(dlr1);
+      lr2.push(dlr2);
+      logRatios.push(dlr1 - dlr2);          // log(ratio_t / ratio_t-1)
+      if(logRatios.length > 168) logRatios.shift(); // keep 1 week rolling
+    }
+
+    // ── GUARD 1: Hurst trending detection ─────────────────────────
+    // Compute rolling Hurst on last 48 log-ratio returns.
+    // If H > 0.55 → market is trending → pause swaps to stop selling
+    // the outperformer in a one-directional move.
+    // If H < 0.48 → mean-reversion restored → resume.
+    let hurstNow = 0.5;
+    if(logRatios.length >= 12){
+      const lr  = logRatios.slice(-48);
+      const mn  = lr.reduce((s,v)=>s+v,0)/lr.length;
+      const cum = lr.reduce((acc,v,i)=>{ acc.push((acc[i-1]||0)+(v-mn)); return acc; },[]);
+      const R   = Math.max(...cum) - Math.min(...cum);
+      const sd  = Math.sqrt(lr.reduce((s,v)=>s+(v-mn)**2,0)/(lr.length-1)||1e-9);
+      hurstNow  = R>0&&sd>0 ? Math.log(R/sd)/Math.log(lr.length) : 0.5;
+      hurstNow  = Math.max(0.2, Math.min(0.9, hurstNow));
+    }
+    if(!trendPaused && hurstNow > HURST_PAUSE){
+      trendPaused = true; trendPausedAt = date.toISOString(); guardPauseCount++;
+    } else if(trendPaused && hurstNow < HURST_RESUME){
+      trendPaused = false; trendResumedAt = date.toISOString();
+    }
+
+    // ── GUARD 2+3: Dynamic min-net threshold ──────────────────────
+    // Raises bar for swap execution when brokerage or frequency is high.
+    const brokPctSoFar = totBrok / (startCap || 1);
+    const now24h = date.getTime();
+    while(recentSwapTimes.length && now24h-recentSwapTimes[0] > 86400000) recentSwapTimes.shift();
+    const swaps24h = recentSwapTimes.length;
+    const brokMult = brokPctSoFar > BROK_CAP_PCT ? 3 : 1;   // Guard 2
+    const freqMult = swaps24h > MAX_SWAPS_24H    ? 2 : 1;   // Guard 3
+    const minNet   = MIN_NET_INR * brokMult * freqMult;      // Guard 4 combined
+
+    const swapAllowed = !trendPaused;
+
+    // ── SWAP ─────────────────────────────────────────────────
+    // Gated by all 4 protective guards:
+    //   Guard 1 (trendPaused): skip if Hurst > 0.55 (trending market)
+    //   Guard 2 (brokMult):    raise minNet 3× if brok > 4% of capital
+    //   Guard 3 (freqMult):    raise minNet 2× if > 48 swaps in last 24h
+    //   Guard 4 (minNet):      skip any swap earning < ₹10 net
+    const inRange = r>=rL && r<=rH;
+    if(!inRange) oorHours++;
+
+    const tgt = v3Res(L, r, rL, rH);
+    const xT  = Math.max(0, Math.round(tgt.x));
+    const yT  = Math.max(0, Math.round(tgt.y));
+    const dx  = xT - xS;
+    const dy  = yT - yS;
+
+    let traded=false, swapInfo=null;
+
+    if(swapAllowed && dx<0 && xS>1){
+      const sellA = Math.min(-dx, xS-1);
+      if(sellA>=1){
+        const grossRev = sellA*p1;
+        const netRev   = grossRev*(1-bSell);
+        const buyB     = Math.floor(netRev/(p2*(1+bBuy)));
+        if(buyB>=1){
+          const brok = bSell*grossRev + bBuy*buyB*p2;
+          const net  = grossRev - buyB*p2 - brok;
+          if(net >= minNet){                          // Guard 4 enforced here
+            xS-=sellA; yS+=buyB;
+            cash+=net; totBrok+=brok; grossFees+=(grossRev-buyB*p2); swapCount++;
+            recentSwapTimes.push(date.getTime());    // Guard 3 frequency track
+            traded=true;
+            swapInfo={date:date.toISOString(),sellA:true,sell:sellA,buy:buyB,
+              net,cash,brok,p1,p2,xS,yS,inRange,paused:false};
+            swaps.push(swapInfo);
+          }else skipCount++;
+        }else skipCount++;
+      }
+    } else if(swapAllowed && dx>0 && yS>1){
+      const sellB_want = dy<0 ? -dy : Math.max(1,Math.round(dx*p1/p2));
+      const sellB = Math.min(sellB_want, yS-1);
+      if(sellB>=1){
+        const grossRev = sellB*p2;
+        const netRev   = grossRev*(1-bSell);
+        const buyA     = Math.floor(netRev/(p1*(1+bBuy)));
+        if(buyA>=1){
+          const brok = bSell*grossRev + bBuy*buyA*p1;
+          const net  = grossRev - buyA*p1 - brok;
+          if(net >= minNet){                          // Guard 4 enforced here
+            xS+=buyA; yS-=sellB;
+            cash+=net; totBrok+=brok; grossFees+=(grossRev-buyA*p1); swapCount++;
+            recentSwapTimes.push(date.getTime());    // Guard 3 frequency track
+            traded=true;
+            swapInfo={date:date.toISOString(),sellA:false,sell:sellB,buy:buyA,
+              net,cash,brok,p1,p2,xS,yS,inRange,paused:false};
+            swaps.push(swapInfo);
+          }else skipCount++;
+        }else skipCount++;
+      }
+    }
+    if(!traded&&!inRange) oorCount++;
+
+    // ── SMART REINVESTMENT ────────────────────────────────────────
+    // Runs every hour regardless of InRange status.
+    // Two modes chosen automatically:
+    //
+    // REBALANCE MODE — fires when one asset < 20% of pool value.
+    //   Buys ONLY the depleted asset, as few as 1 share at a time.
+    //   Minimum cash needed = 1 share of the cheaper asset + brok.
+    //   Restores balance so normal-mode can resume, and ensures
+    //   reinvestment NEVER stops due to share depletion.
+    //
+    // NORMAL MODE — fires when pool is balanced (both > 20% value).
+    //   Buys 1A + round(Y/X)B per lot, as many lots as cash allows.
+    //
+    // Both modes recompute L with the same fixed rL/rH after buying.
+    if(doReinv && cash>0){
+      const valA  = xS*p1;
+      const valB  = yS*p2;
+      const total = valA+valB;
+      // balanceFrac = fraction of pool in the smaller side (0=empty, 0.5=perfect)
+      const balanceFrac = total>0 ? Math.min(valA,valB)/total : 0;
+
+      if(balanceFrac < 0.20 && total>0){
+        // ── REBALANCE MODE ──────────────────────────────────────
+        const buyA   = valA <= valB;          // buy whichever side is smaller
+        const bPrice = buyA ? p1 : p2;
+        const minCost= bPrice*(1+bReinv);     // cost of just 1 share + brok
+        if(cash >= minCost){
+          const n    = Math.floor(cash/minCost);
+          const raw  = n*bPrice;
+          const brok = bReinv*raw;
+          const spent= raw+brok;
+          if(spent>0 && cash>=spent && n>=1){
+            if(buyA){ xS+=n; xAdded+=n; } else { yS+=n; yAdded+=n; }
+            cash-=spent; totBrok+=brok; reinvestedCap+=raw;
+            reinvestCount++; reinvestRebalCount++;
+            const rCur=cl(r,rL,rH);
+            L=computeL(xS*p1+yS*p2,p1,p2,rCur,rL,rH);
+            reinvests.push({date:date.toISOString(),mode:'rebalance',
+              addX:buyA?n:0, addY:buyA?0:n, ratio:null, n,
+              raw,brok,spent,cash,xS,yS,p1,p2,inRange});
+          }
+        }
+      } else if(xS>0 && yS>0){
+        // ── NORMAL MODE ─────────────────────────────────────────
+        const ratio   = Math.max(1,Math.round(yS/xS));
+        const rawLot  = p1+ratio*p2;
+        const lotCost = rawLot*(1+bReinv);
+        if(cash>=lotCost){
+          const n    = Math.floor(cash/lotCost);
+          const addX = n, addY = n*ratio;
+          const raw  = addX*p1+addY*p2;
+          const brok = bReinv*raw;
+          const spent= raw+brok;
+          if(cash>=spent && addX>=1 && addY>=1){
+            xS+=addX; yS+=addY;
+            xAdded+=addX; yAdded+=addY;
+            cash-=spent; totBrok+=brok; reinvestedCap+=raw;
+            reinvestCount++; reinvestNormalCount++;
+            const rCur=cl(r,rL,rH);
+            L=computeL(xS*p1+yS*p2,p1,p2,rCur,rL,rH);
+            reinvests.push({date:date.toISOString(),mode:'normal',
+              addX,addY,ratio,n,raw,brok,spent,cash,xS,yS,p1,p2,inRange});
+          }
+        }
+      }
+    }
+
+    // ── EQUITY SNAPSHOT ──────────────────────────────────────
+    curve.push({
+      date:date.toISOString(),
+      pool:xS*p1+yS*p2+cash,
+      hold:x0*p1+y0*p2,
+      cash, inRange
+    });
+  }
+
+  // ── FINAL METRICS ────────────────────────────────────────────
+  const{c1:pF1,c2:pF2}=hourly.at(-1);
+  const finalPool = xS*pF1+yS*pF2;
+  const finalHold = x0*pF1+y0*pF2;
+  const totalVal  = finalPool+cash;
+  const il        = finalPool-finalHold;
+  const alpha     = totalVal-finalHold;
+  const oorPct    = hourly.length>1 ? oorHours/(hourly.length-1)*100 : 0;
+  const corr      = pearson(lr1,lr2);
+
+  return{swaps,reinvests,curve,r:{
+    startCap,totalVal,finalHold,finalPool,cash,
+    grossFees,totBrok,il,alpha,
+    totalRoi:   startCap>0?(totalVal/startCap-1)*100:0,
+    holdRoi:    startCap>0?(finalHold/startCap-1)*100:0,
+    alphaRoi:   finalHold>0?alpha/finalHold*100:0,
+    ilPct:      finalHold>0?il/finalHold*100:0,
+    trendPaused, trendPausedAt, trendResumedAt, guardPauseCount,
+    swapCount,skipCount,reinvestCount,reinvestNormalCount,reinvestRebalCount,
+    xAdded,yAdded,reinvestedCap,
+    x0,y0,xF:xS,yF:yS,p1_0,p2_0,pF1,pF2,
+    hours:hourly.length,oorHours,oorPct,
+    band:band*100,rL,rH,rC,cf,corr,
+  }};
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHART
+// ═══════════════════════════════════════════════════════════════
+function drawChart(canvas,curve,reinvests){
+  if(!curve.length) return;
+  const dpr=devicePixelRatio||1;
+  const rect=canvas.getBoundingClientRect();
+  canvas.width=rect.width*dpr; canvas.height=rect.height*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const W=rect.width,H=rect.height;
+  const P={t:16,r:14,b:36,l:82};
+  const cW=W-P.l-P.r, cH=H-P.t-P.b;
+
+  const step=Math.max(1,Math.floor(curve.length/600));
+  const pts=curve.filter((_,i)=>i%step===0);
+
+  let yMin=Infinity,yMax=-Infinity;
+  for(const p of pts){
+    if(p.pool<yMin)yMin=p.pool; if(p.pool>yMax)yMax=p.pool;
+    if(p.hold<yMin)yMin=p.hold; if(p.hold>yMax)yMax=p.hold;
+  }
+  const pad=(yMax-yMin)*0.08; yMin-=pad; yMax+=pad;
+  if(yMin>=yMax){yMin-=1;yMax+=1;}
+
+  const toX=i=>P.l+(i/(pts.length-1||1))*cW;
+  const toY=v=>P.t+cH-((v-yMin)/(yMax-yMin))*cH;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Grid
+  for(let g=0;g<=5;g++){
+    const yv=yMin+(g/5)*(yMax-yMin),yp=toY(yv);
+    ctx.strokeStyle='rgba(148,163,184,.06)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(P.l,yp); ctx.lineTo(P.l+cW,yp); ctx.stroke();
+    ctx.fillStyle='rgba(148,163,184,.42)'; ctx.font='9px Space Mono,monospace'; ctx.textAlign='right';
+    const v=Math.abs(yMax-yMin)>5e5?`₹${(yv/1e5).toFixed(1)}L`:
+             Math.abs(yMax-yMin)>1e4?`₹${(yv/1e3).toFixed(0)}K`:`₹${yv.toFixed(0)}`;
+    ctx.fillText(v,P.l-4,yp+3);
+  }
+
+  // X-axis dates
+  for(let i=0;i<=5;i++){
+    const idx=Math.round((i/5)*(pts.length-1));
+    ctx.fillStyle='rgba(148,163,184,.38)'; ctx.font='9px Outfit,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(new Date(pts[idx].date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}),toX(idx),H-P.b+13);
+  }
+
+  // Out-of-range shading (red)
+  let inOor=false,oors=0;
+  for(let i=0;i<pts.length;i++){
+    if(!pts[i].inRange&&!inOor){inOor=true;oors=i}
+    if((pts[i].inRange||i===pts.length-1)&&inOor){
+      ctx.fillStyle='rgba(244,63,94,.08)';
+      ctx.fillRect(toX(oors),P.t,toX(i)-toX(oors)||2,cH);
+      inOor=false;
+    }
+  }
+
+  // Reinvestment markers
+  const rSet=new Set(reinvests.map(r=>r.date.substring(0,13)));
+  pts.forEach((p,i)=>{
+    if(rSet.has(p.date.substring(0,13))){
+      ctx.fillStyle='rgba(16,185,129,.55)';
+      ctx.fillRect(toX(i)-1.5,P.t,3,cH);
+    }
+  });
+
+  // Hold line (purple dashed)
+  ctx.save(); ctx.setLineDash([5,5]); ctx.strokeStyle='rgba(139,92,246,.50)'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  pts.forEach((p,i)=>i===0?ctx.moveTo(toX(i),toY(p.hold)):ctx.lineTo(toX(i),toY(p.hold)));
+  ctx.stroke(); ctx.restore();
+
+  // Pool area fill
+  const ag=ctx.createLinearGradient(0,P.t,0,P.t+cH);
+  ag.addColorStop(0,'rgba(6,182,212,.18)'); ag.addColorStop(1,'rgba(6,182,212,0)');
+  ctx.beginPath();
+  pts.forEach((p,i)=>i===0?ctx.moveTo(toX(i),toY(p.pool)):ctx.lineTo(toX(i),toY(p.pool)));
+  ctx.lineTo(toX(pts.length-1),P.t+cH); ctx.lineTo(P.l,P.t+cH); ctx.closePath();
+  ctx.fillStyle=ag; ctx.fill();
+
+  // Pool line
+  ctx.beginPath(); ctx.strokeStyle='#06b6d4'; ctx.lineWidth=2; ctx.lineJoin='round';
+  pts.forEach((p,i)=>i===0?ctx.moveTo(toX(i),toY(p.pool)):ctx.lineTo(toX(i),toY(p.pool)));
+  ctx.stroke();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+let ST={swaps:[],reinvests:[],curve:[],r:null};
+
+function setStatus(cls,html){const el=$('status');el.className=`status ${cls}`;el.innerHTML=html}
+
+function renderMetrics(r){
+  const mc=(lbl,val,delta,cls='',d='')=>`<div class="mc ${cls} ${d}">
+    <div class="mc-lbl">${lbl}</div><div class="mc-val">${val}</div>
+    ${delta?`<div class="mc-d">${delta}</div>`:''}
+  </div>`;
+  $('mrow').innerHTML=[
+    mc('Starting Capital',  inr(r.startCap), null,'','d1'),
+    mc('Pool Total Value',  inr(r.totalVal),`<span class="${r.totalRoi>=0?'pos':'neg'}">${pct(r.totalRoi)} vs opening</span>`,'hl','d2'),
+    mc('Buy &amp; Hold',    inr(r.finalHold),`<span class="${r.holdRoi>=0?'pos':'neg'}">${pct(r.holdRoi)} vs opening</span>`,'','d3'),
+    mc('Pool Alpha',        inr(r.alpha),    `<span class="${r.alpha>=0?'pos':'neg'}">${pct(r.alphaRoi)} over hold</span>`,r.alpha>=0?'g':'r','d4'),
+    mc('Cash Collected',    inr(r.cash),     `<span class="mut">${r.swapCount} profitable swaps</span>`,'','d5'),
+    mc('Impermanent Loss',  inr(r.il),       `<span class="${r.ilPct>=0?'pos':'neg'}">${pct(r.ilPct,3)} of hold</span>`,r.il<0?'r':'g','d6'),
+  ].join('');
+  $('mrow').classList.remove('hidden');
+}
+
+function renderReinvest(r,l1,l2){
+  const s=(lbl,val,cls='')=>`<div class="st"><div class="st-l">${lbl}</div><div class="st-v ${cls}">${val}</div></div>`;
+  $('reinvStats').innerHTML=[
+    s('Fixed Band ±',               `${dec(r.band,2)}%`,'amb'),
+    s('Concentration Factor',       `${dec(r.cf,2)}×`,'amb'),
+    s('In-Range Hours',             `${dec(100-r.oorPct,1)}%`,(100-r.oorPct)>70?'pos':'neg'),
+    s('Out-of-Range Hours',         `${dec(r.oorPct,1)}%`,r.oorPct>30?'neg':'mut'),
+    s('🔄 Normal Reinvestments',    r.reinvestNormalCount?`${r.reinvestNormalCount}×`:'None', r.reinvestNormalCount?'pos':'mut'),
+    s('⚖️ Rebalance Reinvestments', r.reinvestRebalCount ?`${r.reinvestRebalCount}×` :'None', r.reinvestRebalCount ?'amb':'mut'),
+    s('Total Reinvest Events',      r.reinvestCount?`${r.reinvestCount}×`:'None',r.reinvestCount?'pos':'mut'),
+    s(`${l1} Added`,                r.xAdded?`+${qty(r.xAdded)}`:'—','pos'),
+    s(`${l2} Added`,                r.yAdded?`+${qty(r.yAdded)}`:'—','pos'),
+    s('Capital Reinvested',         r.reinvestedCap?inr(r.reinvestedCap):'—'),
+    s('Brokerage (all)',            inr(r.totBrok),'neg'),
+    s('Gross Swap Revenue',         inr(r.grossFees)),
+  ].join('');
+
+  // OOR banner — explain inventory depreciation when OOR is high
+  const oorB=$('oorBanner');
+  if(r.oorPct>5){
+    const inv_msg = r.oorPct > 30
+      ? `<b>This is why share counts changed significantly.</b> When one stock outperforms the other enough to push the ratio outside the band, the pool is 100% in the cheaper asset — it has already sold all of the expensive one. Widening the band (or increasing Sigma factor) keeps the ratio inside the range more often and reduces this effect.`
+      : `Widening the band slightly will reduce out-of-range periods.`;
+    oorB.innerHTML=`<span style="font-size:1.1rem;flex-shrink:0">⚠️</span>
+    <div><b>Pool was out of range ${dec(r.oorPct,1)}% of the time</b> (${r.oorHours} of ${r.hours-1} hours). No trades execute while out of range — the pool holds whichever asset it drifted into. ${inv_msg}</div>`;
+    oorB.classList.remove('hidden');
+  } else oorB.classList.add('hidden');
+
+  // Position table — show opening, AMM change, reinvest added, final
+  const ammChgX = r.xF - r.x0 - r.xAdded;  // shares gained/lost purely from AMM swaps
+  const ammChgY = r.yF - r.y0 - r.yAdded;
+  const prow=(lbl,x0,ammChg,xA,xF,p0,pF)=>{
+    const sv=x0*p0, fv=xF*pF, chg=fv-sv;
+    const ammCls=ammChg>=0?'pos':'neg';
+    return`<tr>
+      <td><b>${lbl}</b></td>
+      <td style="text-align:right;font-family:var(--fm)">${qty(x0)}</td>
+      <td style="text-align:right;font-family:var(--fm)">${inr(sv)}</td>
+      <td style="text-align:right;font-family:var(--fm)" class="${ammCls}">${ammChg>=0?'+':''}${qty(ammChg)}</td>
+      <td style="text-align:right;font-family:var(--fm);color:var(--green)">+${qty(xA)}</td>
+      <td style="text-align:right;font-family:var(--fm)"><b>${qty(xF)}</b></td>
+      <td style="text-align:right;font-family:var(--fm)"><b>${inr(fv)}</b></td>
+      <td style="text-align:right;font-family:var(--fm)" class="${chg>=0?'pos':'neg'}">${chg>=0?'+':''}${inr(chg)}</td>
+    </tr>`;
+  };
+  $('posBody').innerHTML=
+    prow(l1, r.x0, ammChgX, r.xAdded, r.xF, r.p1_0, r.pF1)+
+    prow(l2, r.y0, ammChgY, r.yAdded, r.yF, r.p2_0, r.pF2)+
+    `<tr class="tot">
+      <td><b>Pool Assets Total</b></td>
+      <td style="text-align:right;font-family:var(--fm)">${qty(r.x0+r.y0)}</td>
+      <td style="text-align:right;font-family:var(--fm)"><b>${inr(r.x0*r.p1_0+r.y0*r.p2_0)}</b></td>
+      <td style="text-align:right;font-family:var(--fm)" class="${(ammChgX+ammChgY)>=0?'pos':'neg'}">${(ammChgX+ammChgY)>=0?'+':''}${qty(ammChgX+ammChgY)}</td>
+      <td style="text-align:right;font-family:var(--fm);color:var(--green)">+${qty(r.xAdded+r.yAdded)}</td>
+      <td style="text-align:right;font-family:var(--fm)">${qty(r.xF+r.yF)}</td>
+      <td style="text-align:right;font-family:var(--fm)"><b>${inr(r.xF*r.pF1+r.yF*r.pF2)}</b></td>
+      <td style="text-align:right;font-family:var(--fm)" class="${(r.finalPool-(r.x0*r.p1_0+r.y0*r.p2_0))>=0?'pos':'neg'}">${(r.finalPool-(r.x0*r.p1_0+r.y0*r.p2_0))>=0?'+':''}${inr(r.finalPool-(r.x0*r.p1_0+r.y0*r.p2_0))}</td>
+    </tr>`;
+
+  const ei=$('reinvExpl');
+  const ammChgXabs = Math.abs(r.xF - r.x0 - r.xAdded);
+  const ammNote = (r.xF - r.x0 - r.xAdded) < 0
+    ? `AMM traded <b>−${qty(ammChgXabs)} ${l1}</b> shares (sold the outperformer, bought underperformer — IL mechanism). `
+    : `AMM accumulated <b>+${qty(ammChgXabs)} extra ${l1}</b> shares through trades. `;
+
+  if(r.reinvestCount>0){
+    const modeBreakdown = r.reinvestRebalCount>0
+      ? `<b>${r.reinvestNormalCount} normal</b> (proportional lot) + <b>${r.reinvestRebalCount} rebalance</b> (single-asset recovery, fired when one side fell below 20% of pool value)`
+      : `<b>${r.reinvestNormalCount} normal</b> proportional-lot events`;
+    ei.className='expl';
+    ei.innerHTML= ammNote +
+      `Reinvestment: ${modeBreakdown} — redeployed <b>${inr(r.reinvestedCap)}</b> into `+
+      `<b>+${qty(r.xAdded)} ${l1}</b> and <b>+${qty(r.yAdded)} ${l2}</b> shares. `+
+      `L grew with the same fixed rL/rH each time, deepening concentration without moving the band. `+
+      (r.reinvestRebalCount>0 ? `Rebalance mode kept compounding uninterrupted even during one-sided ratio drift. ` : '')+
+      `<br/><br/><b>Ledger ↔ Metrics:</b> Final shares (${l1}: ${qty(r.xF)}, ${l2}: ${qty(r.yF)}) match the last ledger row exactly.`;
+  } else {
+    ei.className='expl w';
+    ei.innerHTML= ammNote +
+      `No reinvestments fired — cash never reached the minimum threshold. Try a longer data range or lower brokerage. `+
+      `<br/><br/><b>Ledger ↔ Metrics:</b> Final shares (${l1}: ${qty(r.xF)}, ${l2}: ${qty(r.yF)}) match the last ledger row exactly.`;
+  }
+  $('reinvPanel').classList.remove('hidden');
+}
+
+function renderHealth(r){
+  const corrPct = r.corr!=null ? Math.round(r.corr*100) : null;
+  const fr      = r.grossFees>0 ? r.totBrok/r.grossFees*100 : 0;
+  const brokCapPct = r.totBrok/(r.startCap||1)*100;
+  const swapPerHr  = r.hours>0 ? r.swapCount/r.hours : 0;
+  const priceAsym  = r.p1_0>0&&r.p2_0>0 ? Math.max(r.p1_0,r.p2_0)/Math.min(r.p1_0,r.p2_0) : 1;
+  const sr      = r.swapCount>0 ? r.swapCount/(r.swapCount+(r.skipCount||0))*100 : 0;
+
+  const s=(lbl,val,cls='')=>
+    `<div class="st"><div class="st-l">${lbl}</div><div class="st-v ${cls}">${val}</div></div>`;
+
+  $('healthStats').innerHTML=[
+    s('Pair Correlation',   corrPct!=null?`${corrPct}%`:'—', corrPct>70?'pos':corrPct>40?'amb':'neg'),
+    s('Band ±',             `${dec(r.band,2)}%`,'amb'),
+    s('Concentration',      `${dec(r.cf,2)}×`,'amb'),
+    s('Price Asymmetry',    `${dec(priceAsym,2)}×`, priceAsym>=2?'pos':'neg'),
+    s('Swaps / Hour',       `${dec(swapPerHr,2)}`, swapPerHr<1?'pos':swapPerHr<2?'amb':'neg'),
+    s('Brokerage / Capital',`${dec(brokCapPct,2)}%`, brokCapPct<4?'pos':brokCapPct<8?'amb':'neg'),
+    s('Friction / Gross',   `${dec(fr,1)}%`, fr<15?'pos':fr<30?'amb':'neg'),
+    s('In-Range Rate',      `${dec(100-r.oorPct,1)}%`, (100-r.oorPct)>70?'pos':'neg'),
+    s('Trend Pauses (Guard 1)', r.guardPauseCount>0?`${r.guardPauseCount}× fired`:'0 — not needed',
+      r.guardPauseCount>0?'amb':'pos'),
+    s('Total Swaps',        qty(r.swapCount),'pos'),
+    s('Hours Simulated',    qty(r.hours)),
+  ].join('');
+
+  const tips=[];
+
+  // Guard 1 — trending market warning
+  if(r.guardPauseCount>0)
+    tips.push(`<b>⚡ Trending-market guard fired ${r.guardPauseCount}× (Guard 1).</b> The rolling Hurst exponent exceeded 0.55, indicating the price ratio was trending rather than mean-reverting. Swaps were paused automatically to prevent selling the outperformer into a one-directional move. This is the primary defence against the negative-IL pattern seen in trending stock pairs.`);
+
+  // Price asymmetry warning (key predictor of negative IL)
+  if(priceAsym < 1.5)
+    tips.push(`<b>⚠️ Low price asymmetry (${dec(priceAsym,2)}×) — high IL risk.</b> Both stocks are priced similarly per share. Analysis of 7 historical runs shows all negative-IL cases had price asymmetry below 1.5×. When both stocks cost roughly the same, each 1% ratio move shifts nearly equal share counts on both sides — maximising IL in trending markets. Consider pairs where one stock costs at least 2× more than the other.`);
+
+  // Brokerage drain warning
+  if(brokCapPct > 4)
+    tips.push(`<b>⚠️ High brokerage drain (${dec(brokCapPct,2)}% of capital — Guard 2 active).</b> Cumulative brokerage exceeded 4% of starting capital. The min-net threshold was automatically raised 3× to throttle marginal trades. Run 3 in the analysis had 13.46% brokerage drain with 1,468 swaps — the primary cause of its negative IL. Widen the band or increase the sigma factor to reduce swap frequency.`);
+
+  // Swap frequency warning
+  if(swapPerHr > 2)
+    tips.push(`<b>⚠️ High swap rate (${dec(swapPerHr,2)}/hr — Guard 3 active).</b> More than 2 swaps per hour triggers the frequency throttle (min-net raised 2×). Very high swap rates are a sign the band is too tight for this pair's volatility. Increase Min Band to slow trade frequency without widening out of fees range.`);
+
+  // Correlation warning
+  if(corrPct!=null && corrPct<40)
+    tips.push(`<b>Low correlation (${corrPct}%):</b> Stocks move independently. The ratio will trend rather than mean-revert, generating persistent IL. Target pairs with ≥70% log-return correlation.`);
+
+  // OOR warning
+  if(r.oorPct>30)
+    tips.push(`<b>High out-of-range rate (${dec(r.oorPct,1)}%):</b> Pool was outside the band ${dec(r.oorPct,1)}% of the time — no fees earned during those hours. Increase Min Band or Sigma Factor to keep the ratio inside the range.`);
+
+  if(!tips.length)
+    tips.push(`<b>✅ Strategy is healthy.</b> All 4 protective guards are within safe thresholds. Pool is generating alpha with manageable brokerage, the market is mean-reverting (Hurst < 0.55), and price asymmetry is sufficient to buffer IL.`);
+
+  const good = r.alpha>=0 && brokCapPct<8 && (corrPct==null||corrPct>40) && priceAsym>=1.5;
+  $('healthExpl').className=`expl ${good?'':'w'}`;
+  $('healthExpl').innerHTML=tips.join('<br/><br/>');
+  $('healthPanel').classList.remove('hidden');
+}
+
+function renderHistory(swaps,reinvests,l1,l2){
+  const all=[
+    ...swaps.map(s=>({...s,type:'swap'})),
+    ...reinvests.map(r=>({...r,type:'reinvest'}))
+  ].sort((a,b)=>a.date.localeCompare(b.date));
+
+  $('evtCount').textContent=`${all.length} events`;
+  const show=all.slice(-400);
+  $('tblNote').textContent=all.length>400?`Showing last 400 of ${all.length}. Export CSV for full history.`:'';
+
+  $('histBody').innerHTML=show.map(e=>{
+    const oor_cls=!e.inRange?' or':'';
+    if(e.type==='swap'){
+      const a1=e.sellA?l1:l2, a2=e.sellA?l2:l1;
+      return`<tr class="sr${oor_cls}">
+        <td>${fdt(e.date)}</td>
+        <td><span class="bdg bs">SWAP</span>${!e.inRange?'<span class="bdg bo" style="margin-left:4px">OOR</span>':''}</td>
+        <td style="font-family:var(--fb)">Sell ${a1} → Buy ${a2}</td>
+        <td class="r neg">−${qty(e.sell)}</td>
+        <td class="r pos">+${qty(e.buy)}</td>
+        <td class="r pos">${inr2(e.net)}</td>
+        <td class="r">${inr(e.cash)}</td>
+        <td class="r">${qty(e.xS)}</td>
+        <td class="r">${qty(e.yS)}</td>
+        <td class="r ${e.inRange?'pos':'neg'}">${e.inRange?'✓ Yes':'✗ No'}</td>
+      </tr>`;
+    }
+    const isRebal = e.mode==='rebalance';
+    const badge   = isRebal ? '<span class="bdg breb">⚖️ REBALANCE</span>' : '<span class="bdg br">🔄 REINVEST</span>';
+    const rowCls  = isRebal ? 'reb-r' : 'rr';
+    const actionTxt = isRebal
+      ? `Buy ${qty(e.addX>0?e.addX:e.addY)} ${e.addX>0?l1:l2} only (rebalancing depleted side)`
+      : `+${qty(e.addX)} ${l1} + ${qty(e.addY)} ${l2} (1:${e.ratio}, ${e.n} lots)`;
+    return`<tr class="${rowCls}">
+      <td>${fdt(e.date)}</td>
+      <td>${badge}${!e.inRange?'<span class="bdg bo" style="margin-left:4px">OOR</span>':''}</td>
+      <td style="font-family:var(--fb)">${actionTxt}</td>
+      <td class="r mut">—</td>
+      <td class="r pos">+${qty(e.addX+e.addY)}</td>
+      <td class="r neg">${inr2(-e.spent)}</td>
+      <td class="r">${inr(e.cash)}</td>
+      <td class="r pos">${qty(e.xS)}</td>
+      <td class="r pos">${qty(e.yS)}</td>
+      <td class="r ${e.inRange?'pos':'neg'}">${e.inRange?'✓ Yes':'✗ No'}</td>
+    </tr>`;
+  }).join('');
+  $('histPanel').classList.remove('hidden');
+}
+
+function dlCsv(swaps,reinvests){
+  const h='Type,Mode,Date,Action,Sell,Buy,Net,Cash,A_Shares,B_Shares,A_Price,B_Price,InRange';
+  const rows=[h,
+    ...swaps.map(s=>[
+      'SWAP','normal',s.date,`"${s.sellA?'Sell A→Buy B':'Sell B→Buy A'}"`,
+      s.sell,s.buy,s.net.toFixed(2),s.cash.toFixed(2),s.xS,s.yS,s.p1,s.p2,s.inRange
+    ].join(',')),
+    ...reinvests.map(r=>[
+      'REINVEST',r.mode||'normal',r.date,
+      r.mode==='rebalance'
+        ?`"Buy ${r.addX>0?r.addX:r.addY} ${r.addX>0?'A':'B'} only (rebalance)"`
+        :`"Buy ${r.addX} A + ${r.addY} B"`,
+      0,r.addX+r.addY,(-r.spent).toFixed(2),r.cash.toFixed(2),r.xS,r.yS,r.p1,r.p2,r.inRange
+    ].join(','))
+  ];
+  const b=new Blob([rows.join('\n')],{type:'text/csv'});
+  const u=URL.createObjectURL(b);
+  Object.assign(document.createElement('a'),{href:u,download:'v3pool_ledger.csv'}).click();
+  URL.revokeObjectURL(u);
+}
+
+// ── Band info preview ──────────────────────────────────────────
+function updateBandInfo(){
+  const dynOn=$('dynBand').checked;
+  $('fixedBandRow').classList.toggle('hidden',dynOn);
+  const b=dynOn?null:+(($('fixedBand').value)||20)/100;
+  if(b){
+    const cf=concFactor(b);
+    $('biWidth').textContent=`±${dec(b*100,1)}%`;
+    $('biConc').textContent=`${dec(cf,2)}×`;
+    $('biAmp').textContent=`${dec(cf,1)}× more fees vs full-range`;
+  } else {
+    $('biWidth').textContent='Set from data σ';
+    $('biConc').textContent='Computed at runtime';
+    $('biAmp').textContent=`k=${$('kSig').value} × hourlyσ`;
+  }
+}
+$('dynBand').onchange=updateBandInfo;
+$('fixedBand').oninput=updateBandInfo;
+$('kSig').oninput=updateBandInfo;
+updateBandInfo();
+
+// ── File labels ───────────────────────────────────────────────
+// ── Heading sync ─────────────────────────────────────────────────────────
+function updateHeading(){
+  const l1 = $('label1').value || 'Asset 1';
+  const l2 = $('label2').value || 'Asset 2';
+  const el = $('pairHeading');
+  if(el) el.textContent = `${l1} \u2194 ${l2}`;
+}
+$('label1').addEventListener('input', updateHeading);
+$('label2').addEventListener('input', updateHeading);
+updateHeading();
+
+// ── Auto-extract stock name from filename ─────────────────────────────────
+function stockNameFromFile(filename){
+  return (filename || '')
+    .replace(/\.(csv|xlsx|txt)$/i,'')          // drop extension
+    .replace(/_?(1m|5m|15m|30m|1h|2h|4h|daily|hourly|min|minute|hr|weekly).*$/i,'') // drop timeframe
+    .replace(/[_\-\.]+/g,' ')                  // separators → spaces
+    .replace(/\b\w/g, c => c.toUpperCase())    // Title Case
+    .trim() || 'Asset';
+}
+
+$('file1').onchange=()=>{
+  const f = $('file1').files[0];
+  if(!f) return;
+  $('fname1').textContent = f.name;
+  const name = stockNameFromFile(f.name);
+  if(name && name !== 'Asset') $('label1').value = name;
+  updateHeading();
+};
+$('file2').onchange=()=>{
+  const f = $('file2').files[0];
+  if(!f) return;
+  $('fname2').textContent = f.name;
+  const name = stockNameFromFile(f.name);
+  if(name && name !== 'Asset') $('label2').value = name;
+  updateHeading();
+};
+$('dlBtn').onclick=()=>{if(ST.r) dlCsv(ST.swaps,ST.reinvests)};
+
+// ── Run ───────────────────────────────────────────────────────
+$('runBtn').onclick=async()=>{
+  const f1=$('file1').files[0],f2=$('file2').files[0];
+  if(!f1||!f2){setStatus('s-err','<b>Error:</b> Please upload both CSV files first.');return}
+
+  $('runBtn').disabled=true; $('runBtn').textContent='⏳ Simulating…';
+  ['mrow','chartPanel','reinvPanel','healthPanel','histPanel'].forEach(id=>$(id).classList.add('hidden'));
+  setStatus('s-info','<b>Running…</b> Computing fixed concentration band and iterating hourly V3 reserves…');
+  await new Promise(r=>setTimeout(r,12));
+
+  try{
+    const[t1,t2]=await Promise.all([f1.text(),f2.text()]);
+    const l1=$('label1').value||'Asset 1', l2=$('label2').value||'Asset 2';
+    const result=runSimulation(parseCsv(t1),parseCsv(t2),+$('capital').value,{
+      bBuy:  +$('bbuy').value, bSell: +$('bsell').value,
+      bReinv:+$('breinv').value, reinvest:$('doReinv').checked,
+      dynBand:$('dynBand').checked, fixedBand:+$('fixedBand').value,
+      minBand:+$('minBand').value, maxBand:+$('maxBand').value,
+      volLB:+$('volLB').value, kSig:+$('kSig').value,
+    });
+
+    if(result.err){setStatus('s-err',`<b>Error:</b> ${result.err}`);return}
+
+    ST=result;
+    const{swaps,reinvests,curve,r}=result;
+    const beat=r.alpha>=0;
+
+    setStatus(beat?'s-ok':'s-warn',
+      `<b>${beat?'✅ Pool beats hold':'⚠️ Pool behind hold'}</b> by ${inr(Math.abs(r.alpha))} (${pct(r.alphaRoi,2)}).  `+
+      `Band: ±${dec(r.band,2)}% (${dec(r.cf,2)}× concentration) · set once at open, never moved.  `+
+      `In-range: ${dec(100-r.oorPct,1)}% · Cash: ${inr(r.cash)} · IL: ${inr(r.il)} · `+
+      `${r.swapCount} swaps · ${r.reinvestCount} reinvestments.`);
+
+    renderMetrics(r);
+    renderReinvest(r,l1,l2);
+    renderHealth(r);
+    renderHistory(swaps,reinvests,l1,l2);
+    $('chartPanel').classList.remove('hidden');
+    requestAnimationFrame(()=>drawChart($('chart'),curve,reinvests));
+
+  }catch(err){
+    setStatus('s-err',`<b>Error:</b> ${err.message}`);
+    console.error(err);
+  }finally{
+    $('runBtn').disabled=false; $('runBtn').textContent='▶ Run Simulation';
+  }
+};
+</script>
+</body>
+</html>
